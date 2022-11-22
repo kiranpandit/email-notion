@@ -7,6 +7,7 @@ import uuid
 import boto3
 from botocore.exceptions import ClientError
 import requests
+import json
 
 workmail_message_flow = boto3.client('workmailmessageflow')
 s3 = boto3.client('s3')
@@ -165,7 +166,7 @@ def get_notion_secret():
         raise e
 
     # Decrypts secret using the associated KMS key.
-    secret = get_secret_value_response['SecretString']
+    secret = json.loads(get_secret_value_response['SecretString'])['NOTION_SECRET_KEY']
     if not secret:
       print("Cannot find the notion secret in secrets manager")
     else:
