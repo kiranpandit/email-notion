@@ -4,6 +4,7 @@ import boto3
 import email
 import os
 import uuid
+from datetime import datetime
 
 workmail_message_flow = boto3.client('workmailmessageflow')
 s3 = boto3.client('s3')
@@ -67,6 +68,9 @@ def lambda_handler(event, context):
     message_id = event['messageId']
     print(f"Received email with message ID {message_id}, flowDirection {flow_direction}, from {from_address} with Subject {subject}")
 
+    current = datetime.now()
+    timestamp = (str(current.year) + '-' + str(current.month) + '-' + str(current.day) + '-' + str(current.hour) + '-' + str(current.minute) + '-' + str(current.second))
+
     try:
         raw_msg = workmail_message_flow.get_raw_message_content(messageId=message_id)
         parsed_msg: Message = email.message_from_bytes(raw_msg['messageContent'].read())
@@ -74,12 +78,32 @@ def lambda_handler(event, context):
         # Updating subject. For more examples, see https://github.com/aws-samples/amazon-workmail-lambda-templates.
         parsed_msg.replace_header('Subject', f"[Hello World!] {subject}")
 
+
+        # Attachment testing
+        attachment = parsed_msg.get_payload()[1]
+        filename = attachment.get_filename()
+        if not attachment:
+            print('There is no attachment')
+        else:
+            print('Wow there is an attachment!')
+            print('it has filename', filename)
+        # Write the attachment to a temp location
+        open('/tmp/' + filename, 'wb').write(attachment.get_payload(decode=True))
+
         # Try to get the email bucket.
         updated_email_bucket_name = os.getenv('UPDATED_EMAIL_S3_BUCKET')
         if not updated_email_bucket_name:
             print('UPDATED_EMAIL_S3_BUCKET not set in environment. '
                   'Please follow https://docs.aws.amazon.com/lambda/latest/dg/env_variables.html to set it.')
             return
+
+        # Upload the file at the temp location to destination s3 bucket and append timestamp to the filename
+        # Extracted attachment is temporarily saved as attach.csv and then uploaded to attach-upload-<timestamp>.csv
+        try:
+            s3.upload_file('/tmp/' + filename, updated_email_bucket_name, from_address + '/attach-upload-' + timestamp + filename)
+            print("Upload Successful")
+        except FileNotFoundError:
+            print("The file was not found")
 
         key = str(uuid.uuid4())
 
