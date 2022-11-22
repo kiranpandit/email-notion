@@ -42,8 +42,17 @@ Resources:
         Version: "2012-10-17"
       Path: "/"
       Policies:
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: 'arn:aws:secretsmanager:us-west-2:742834828641:secret:test/emailbot/key-C1pSn1'
+        - PolicyName: "WorkMailMessageFlowAccessToSecrets"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "secretsmanager:GetResourcePolicy"
+                  - "secretsmanager:GetSecretValue"
+                  - "secretsmanager:DescribeSecret"
+                  - "secretsmanager:ListSecretVersionIds"
+                Resource: "arn:aws:secretsmanager:us-west-2:742834828641:secret:test/emailbot/key-C1pSn1"
         - PolicyName: "WorkMailMessageFlowAccessToS3Bucket"
           PolicyDocument:
             Version: "2012-10-17"
