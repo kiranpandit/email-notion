@@ -4,6 +4,9 @@ import boto3
 import email
 import os
 import uuid
+import boto3
+from botocore.exceptions import ClientError
+import requests
 
 workmail_message_flow = boto3.client('workmailmessageflow')
 s3 = boto3.client('s3')
@@ -61,6 +64,21 @@ def lambda_handler(event, context):
         ]}
 
     """
+
+		# Call API endpoint to verify notion secret
+		notion_secret = get_notion_secret()
+		url = "https://api.notion.com/v1/users"
+
+		payload={}
+		headers = {
+			'Notion-Version': '2022-02-22',
+			'Authorization': 'Bearer ' + notion_secret,
+		}
+
+		response = requests.request("GET", url, headers=headers, data=payload)
+
+		print(response.text)
+
     from_address = event['envelope']['mailFrom']['address']
     subject = event['subject']
     flow_direction = event['flowDirection']
@@ -123,3 +141,29 @@ def lambda_handler(event, context):
             }
         ]
     }
+
+
+def get_notion_secret():
+		# pre-req is to create this secret in secrets manager
+    secret_name = "test/emailbot/key"
+    region_name = "us-west-2"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    # Decrypts secret using the associated KMS key.
+    secret = get_secret_value_response['SecretString']
+		return secret
