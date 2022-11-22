@@ -65,19 +65,19 @@ def lambda_handler(event, context):
 
     """
 
-		# Call API endpoint to verify notion secret
-		notion_secret = get_notion_secret()
-		url = "https://api.notion.com/v1/users"
+    # Call API endpoint to verify notion secret
+    notion_secret = get_notion_secret()
+    url = "https://api.notion.com/v1/users"
 
-		payload={}
-		headers = {
-			'Notion-Version': '2022-02-22',
-			'Authorization': 'Bearer ' + notion_secret,
-		}
+    payload={}
+    headers = {
+      'Notion-Version': '2022-02-22',
+      'Authorization': 'Bearer ' + notion_secret,
+    }
 
-		response = requests.request("GET", url, headers=headers, data=payload)
+    response = requests.request("GET", url, headers=headers, data=payload)
 
-		print(response.text)
+    print(response.text)
 
     from_address = event['envelope']['mailFrom']['address']
     subject = event['subject']
@@ -144,7 +144,7 @@ def lambda_handler(event, context):
 
 
 def get_notion_secret():
-		# pre-req is to create this secret in secrets manager
+    # pre-req is to create this secret in secrets manager
     secret_name = "test/emailbot/key"
     region_name = "us-west-2"
 
@@ -166,4 +166,4 @@ def get_notion_secret():
 
     # Decrypts secret using the associated KMS key.
     secret = get_secret_value_response['SecretString']
-		return secret
+    return secret
