@@ -166,4 +166,8 @@ def get_notion_secret():
 
     # Decrypts secret using the associated KMS key.
     secret = get_secret_value_response['SecretString']
+    if not secret:
+      print("Cannot find the notion secret in secrets manager")
+    else:
+      print("secret of length", len(secret))
     return secret
