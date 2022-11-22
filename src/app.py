@@ -4,7 +4,6 @@ import boto3
 import email
 import os
 import uuid
-import boto3
 from botocore.exceptions import ClientError
 import requests
 import json
@@ -167,8 +166,4 @@ def get_notion_secret():
 
     # Decrypts secret using the associated KMS key.
     secret = json.loads(get_secret_value_response['SecretString'])['NOTION_SECRET_KEY']
-    if not secret:
-      print("Cannot find the notion secret in secrets manager")
-    else:
-      print("secret of length", len(secret))
     return secret
